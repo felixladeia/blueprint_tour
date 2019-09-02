@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Soshigaya House - 360 Panorama view</title>
+		<meta charset="utf-8">
+
+		<link rel="stylesheet" href="css/bootstrap.css" crossorigin="anonymous">
+		
+
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+				touch-action: none;
+			}
+
+            html {
+                overflow: -moz-scrollbars-vertical; 
+                overflow-y: scroll;
+            }
+
+            #item2 {
+                opacity: 1.0;
+                list-style-type: none;
+            }
+            
+            .topmenu {
+			    
+				position: absolute;
+				top: 0px; height:10vh;min-width:10vw;
+				color: #ffffff;
+				padding: 5px;
+				font-family:Monospace;
+				font-size:13px;
+				font-weight: bold;
+				text-align:center;
+				list-style: none;
+				opacity:1.0;
+                background-color: #291818;
+			}
+			
+			 .topimage {
+			    
+				height:8vh;width:8vw; 
+				
+			}
+
+			.menubar {
+			    overflow: -moz-scrollbars-vertical; 
+				position: absolute;
+				top: 100px; height:80%;min-width:10%;
+				color: #ffffff;
+				padding: 5px;
+				font-family:Monospace;
+				font-size:13px;
+				font-weight: bold;
+				text-align:center;
+				overflow-y : scroll;
+				list-style: none;
+				opacity:0.5;
+                background-color: #291818;
+			}
+
+			a {
+				color: #ffffff;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div class="row">
+			<div class="col-xs-10">
+				<div id="container"></div>
+			</div>	
+			<div id="menu" class="col-xs-2">
+			</div>
+		</div>
+
+		<div class="row">
+			<div id="info2" class="topmenu">
+				<img class="topimage" width=60 height=60 src="/panorama/files/move-arrow-right.png" onclick="javascript: toggleBar();">
+			</div>
+			<div id="info" class="menubar" >
+				
+				<!--<div class="row">-->
+				<ul id="thumbs" >
+					
+				</ul>	
+				<!--</div>-->		
+			</div>
+
+		</div>
+		<script src="js/jquery-3.2.1.min.js" integrity="" crossorigin="anonymous"></script>
+		<script src="js/bootstrap.min.js" integrity="" crossorigin="anonymous"></script>
+
+		<script src="../build/three.js"></script>
+
+		<script>
+
+			var PATH = '/_NRVyOZtzO/medium_items/media/';
+
+			var arrPics = [
+				//{name:'MASTER', link: ''								, thumb: PATH + '3797773/app_thumb.jpg' },
+				{name:'LDK1', 			link: PATH + 	'3797774/4096x2048.JPG'	, thumb: PATH + '3797774/thumb.JPG' },
+				{name:'LDK2', 			link: PATH + 	'3797775/4096x2048.JPG'	, thumb: PATH + '3797775/thumb.JPG' },
+				{name:'Room #3', 		link: PATH + 	'3797776/4096x2048.JPG'	, thumb: PATH + '3797776/thumb.JPG' },
+				{name:'Kitchen', 		link: PATH + 	'3797777/4096x2048.JPG'	, thumb: PATH + '3797777/thumb.JPG' },
+				{name:'Room #1', 		link: PATH + 	'3797778/4096x2048.JPG'	, thumb: PATH + '3797778/thumb.JPG' },
+				{name:'Big Balcony #1', link: PATH + 	'3797779/4096x2048.JPG'	, thumb: PATH + '3797779/thumb.JPG' },
+				{name:'Big Balcony #2', link: PATH + 	'3797780/4096x2048.JPG'	, thumb: PATH + '3797780/thumb.JPG' },
+				{name:'Balcony #2', 	link: PATH + 	'3797781/4096x2048.JPG'	, thumb: PATH + '3797781/thumb.JPG' },
+				{name:'Room #2', 		link: PATH + 	'3797783/4096x2048.JPG'	, thumb: PATH + '3797783/thumb.JPG' },
+				{name:'Room #4', 		link: PATH + 	'3797784/4096x2048.JPG'	, thumb: PATH + '3797784/thumb.JPG' },
+				{name:'Balcony #3', 	link: PATH + 	'3797785/4096x2048.JPG'	, thumb: PATH + '3797785/thumb.JPG' },
+				{name:'Bath 1', 		link: PATH + 	'3797786/4096x2048.JPG'	, thumb: PATH + '3797786/thumb.JPG' },
+				{name:'Bath 2', 		link: PATH + 	'3797787/4096x2048.JPG'	, thumb: PATH + '3797787/thumb.JPG' },
+				{name:'Toilet', 		link: PATH + 	'3797788/4096x2048.JPG'	, thumb: PATH + '3797788/thumb.JPG' },
+				{name:'Entrance',		link: PATH + 	'3797789/4096x2048.JPG'	, thumb: PATH + '3797789/thumb.JPG' },
+				{name:'Corridor',		link: PATH + 	'3797790/4096x2048.JPG'	, thumb: PATH + '3797790/thumb.JPG' },
+				{name:'Corridor', 		link: PATH + 	'3797796/4096x2048.JPG'	, thumb: PATH + '3797796/thumb.JPG' }
+			];
+
+			var camera, scene, renderer, mesh;
+
+			var isUserInteracting = false,
+			onMouseDownMouseX = 0, onMouseDownMouseY = 0,
+			lon = 0, onMouseDownLon = 0,
+			lat = 0, onMouseDownLat = 0,
+			phi = 0, theta = 0;
+
+			function changePicture(str){
+				console.log(str);
+				var material = new THREE.MeshBasicMaterial( {
+					map: new THREE.TextureLoader().load( str )
+				} );
+				mesh.material = material;
+			}
+
+			function toggleBar(){
+				$("#info").toggle();
+			}
+			
+			$( document ).ready(function() {
+				console.log( "ready!" );
+				arrPics.forEach(function(pic) {
+					console.log(pic);
+					var l = "";
+					//encodeURIComponent(pic.link) + "');\" href=\"" + 
+					if(pic.name == "MASTER"){
+						l = "<li class=\"item2 col-xs-12\" href=\"#\" ><img width=120px height=60px src=\"" + pic.thumb + 
+						"\">" + pic.name + "</img></li>";	
+					}else{
+						l = "<li class=\"item2 col-xs-12\" onClick=\"javascript:changePicture('" + 
+						pic.link + "');\" href=\"" + 
+						pic.link + "\" ><img width=60px height=30px src=\"" + pic.thumb + 
+						"\">" + pic.name + "</img></li>";
+					}
+
+					$("#thumbs").append(l);
+				});
+				/*
+				for(var pic in arrPics){
+					var l = "<a href=\"" + pic.link + "\" ><img src=\"" + pic.thumb + "\">" + pic.name + "</img></a>";
+					$("#thumbs").append(l);
+				}
+				*/
+			})
+
+			init();
+			animate();
+
+			function init() {
+
+				var container;
+
+				container = document.getElementById( 'container' );
+
+				camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1100 );
+				camera.target = new THREE.Vector3( 0, 0, 0 );
+
+				scene = new THREE.Scene();
+
+				var geometry = new THREE.SphereBufferGeometry( 500, 60, 40 );
+				// invert the geometry on the x-axis so that all of the faces point inward
+				geometry.scale( - 1, 1, 1 );
+
+
+				var material = new THREE.MeshBasicMaterial( {
+					map: new THREE.TextureLoader().load( 'textures/4096x2048.jpg' )
+				} );
+
+				mesh = new THREE.Mesh( geometry, material );
+
+				scene.add( mesh );
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				document.addEventListener( 'mousedown', onPointerStart, false );
+				document.addEventListener( 'mousemove', onPointerMove, false );
+				document.addEventListener( 'mouseup', onPointerUp, false );
+
+				document.addEventListener( 'wheel', onDocumentMouseWheel, false );
+
+				document.addEventListener( 'touchstart', onPointerStart, false );
+				document.addEventListener( 'touchmove', onPointerMove, false );
+				document.addEventListener( 'touchend', onPointerUp, false );
+
+				//
+                /*
+				document.addEventListener( 'dragover', function ( event ) {
+
+					event.preventDefault();
+					event.dataTransfer.dropEffect = 'copy';
+
+				}, false );
+
+				document.addEventListener( 'dragenter', function ( event ) {
+
+					document.body.style.opacity = 0.5;
+
+				}, false );
+
+				document.addEventListener( 'dragleave', function ( event ) {
+
+					document.body.style.opacity = 1;
+
+				}, false );
+
+				document.addEventListener( 'drop', function ( event ) {
+
+					event.preventDefault();
+
+					var reader = new FileReader();
+					reader.addEventListener( 'load', function ( event ) {
+
+						material.map.image.src = event.target.result;
+						material.map.needsUpdate = true;
+
+					}, false );
+					reader.readAsDataURL( event.dataTransfer.files[ 0 ] );
+
+					document.body.style.opacity = 1;
+
+				}, false );
+
+				//
+                */
+				window.addEventListener( 'resize', onWindowResize, false );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function onPointerStart( event ) {
+
+				isUserInteracting = true;
+
+				var clientX = event.clientX || event.touches[ 0 ].clientX;
+				var clientY = event.clientY || event.touches[ 0 ].clientY;
+
+				onMouseDownMouseX = clientX;
+				onMouseDownMouseY = clientY;
+
+				onMouseDownLon = lon;
+				onMouseDownLat = lat;
+
+			}
+
+			function onPointerMove( event ) {
+
+				if ( isUserInteracting === true ) {
+
+					var clientX = event.clientX || event.touches[ 0 ].clientX;
+					var clientY = event.clientY || event.touches[ 0 ].clientY;
+
+					lon = ( onMouseDownMouseX - clientX ) * 0.1 + onMouseDownLon;
+					lat = ( clientY - onMouseDownMouseY ) * 0.1 + onMouseDownLat;
+
+				}
+
+			}
+
+			function onPointerUp( event ) {
+
+				isUserInteracting = false;
+
+			}
+
+			function onDocumentMouseWheel( event ) {
+
+				var fov = camera.fov + event.deltaY * 0.05;
+
+				camera.fov = THREE.Math.clamp( fov, 10, 75 );
+
+				camera.updateProjectionMatrix();
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+				update();
+
+			}
+
+			function update() {
+
+				if ( isUserInteracting === false ) {
+
+					lon += 0.1;
+
+				}
+
+				lat = Math.max( - 85, Math.min( 85, lat ) );
+				phi = THREE.Math.degToRad( 90 - lat );
+				theta = THREE.Math.degToRad( lon );
+
+				camera.target.x = 500 * Math.sin( phi ) * Math.cos( theta );
+				camera.target.y = 500 * Math.cos( phi );
+				camera.target.z = 500 * Math.sin( phi ) * Math.sin( theta );
+
+				camera.lookAt( camera.target );
+
+				/*
+				// distortion
+				camera.position.copy( camera.target ).negate();
+				*/
+
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+	</body>
+</html>
